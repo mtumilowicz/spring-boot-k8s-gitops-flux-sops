@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-boot-k8s-gitops-flux-sops
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: spring-boot-k8s-gitops-flux-sops
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod

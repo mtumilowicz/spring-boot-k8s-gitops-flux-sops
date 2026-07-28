@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: k8s-plain-secrets
+  namespace: flux-system
+type: Opaque
+stringData:
+  # Plaintext bootstrap secret for the workshop.
+  # Kubernetes accepts stringData directly and stores it as base64-encoded Secret data.
+  # Flux reads this key to decrypt SOPS-encrypted application secrets.
+  # Do not commit this kind of private key in a real system.
+  identity.agekey: |
+    # Replace this block with gitops/age/age-key.txt.
+    AGE-SECRET-KEY-1LMXGHNTDVMPP55EU5XQTKPA5JPAQ7WXSYR3YWY55CSS0YEQL8FQSQRX8WE

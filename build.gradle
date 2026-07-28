@@ -1,0 +1,50 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.mtumilowicz'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('bootJar') {
+    archiveFileName = 'spring-boot-k8s-gitops-flux-sops.jar'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
+tasks.register('dockerBuildImage', Exec) {
+    group = 'verification'
+    description = 'Builds the local Docker image used by Docker Desktop Kubernetes tests.'
+    dependsOn tasks.named('bootJar')
+
+    commandLine 'docker',
+            'build',
+            '--tag',
+            'spring-boot-k8s-gitops-flux-sops:latest',
+            '.'
+}
+
+tasks.named('test') {
+    dependsOn tasks.named('dockerBuildImage')
+    systemProperty 'project.root', projectDir.absolutePath
+}

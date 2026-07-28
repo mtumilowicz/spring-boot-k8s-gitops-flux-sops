@@ -1,0 +1,4 @@
+creation_rules:
+  - path_regex: overlays/.*/secret\.enc\.yaml
+    encrypted_regex: ^(data|stringData)
+    age: age1dj7ku95y5vzu8v68zxemxtkzqptu8ghjk33zzjyqhej73dv0af6sznawlf
