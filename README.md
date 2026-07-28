@@ -79,8 +79,8 @@ src/main/java/                         Spring Boot application
 src/main/resources/application.yml     local fallback config
 src/test/java/                         Docker Desktop Kubernetes + Flux test
 gitops/base/                           shared Kubernetes Deployment and Service
-gitops/overlays/dev/                   dev Namespace, patch and SOPS Secret
-gitops/overlays/prod/                  prod Namespace, patch and SOPS Secret
+gitops/overlays/dev/                   dev Namespace, patch, .sops.yaml and SOPS Secret
+gitops/overlays/prod/                  prod Namespace, patch, .sops.yaml and SOPS Secret
 gitops/clusters/dev/                   dev Flux wiring
 gitops/clusters/prod/                  prod Flux wiring
 gitops/age/                            workshop age keypair
@@ -127,12 +127,27 @@ demo:
 
 depending on the overlay.
 
-## Workshop age key
-
-This project intentionally commits the age private key under:
+Each overlay has its own SOPS policy file:
 
 ```text
-gitops/age/age-key.txt
+gitops/overlays/dev/.sops.yaml
+gitops/overlays/prod/.sops.yaml
+```
+
+This project uses separate age keys for dev and prod:
+
+```text
+gitops/overlays/dev/.sops.yaml   -> dev age public key
+gitops/overlays/prod/.sops.yaml  -> prod age public key
+```
+
+## Workshop age key
+
+This project intentionally commits the age private keys inside the Flux bootstrap Secret manifests:
+
+```text
+gitops/clusters/dev/flux-sops-age-key-bootstrap.yaml
+gitops/clusters/prod/flux-sops-age-key-bootstrap.yaml
 ```
 
 That is only acceptable because this repository is a workshop/demo. In a real repository:
@@ -144,33 +159,47 @@ That is only acceptable because this repository is a workshop/demo. In a real re
 
 ## How Flux gets the age private key
 
-Flux does not read `gitops/age/age-key.txt` directly from the Git repository during normal reconciliation. Flux reads a Kubernetes Secret from its own namespace.
+Flux does not read age key files directly during normal reconciliation. Flux reads Kubernetes Secrets from its own namespace.
 
-The Flux Kustomizations in this project reference:
+The dev Flux Kustomization references:
 
 ```yaml
 decryption:
   provider: sops
   secretRef:
-    name: k8s-plain-secrets
+    name: k8s-plain-secrets-dev
 ```
 
-That means Flux expects this Secret to exist:
+The prod Flux Kustomization references:
+
+```yaml
+decryption:
+  provider: sops
+  secretRef:
+    name: k8s-plain-secrets-prod
+```
+
+That means Flux expects these Secrets to exist:
 
 ```text
 namespace: flux-system
-name: k8s-plain-secrets
+name: k8s-plain-secrets-dev
+key: identity.agekey
+
+namespace: flux-system
+name: k8s-plain-secrets-prod
 key: identity.agekey
 ```
 
-The `k8s-plain-secrets` Secret itself is not SOPS-encrypted in this workshop. It is bootstrap material. When `kubectl apply` sends a Secret with `stringData`, the Kubernetes API server converts that plaintext value into the Secret's `data` field. That conversion is only base64 encoding, not encryption.
+The `k8s-plain-secrets-*` Secrets themselves are not SOPS-encrypted in this workshop. They are bootstrap material. When `kubectl apply` sends a Secret with `stringData`, the Kubernetes API server converts that plaintext value into the Secret's `data` field. That conversion is only base64 encoding, not encryption.
 
 So there is no chicken-and-egg problem in this project:
 
 ```text
 kubectl applies plaintext bootstrap Secret
-  -> Kubernetes stores flux-system/k8s-plain-secrets
-  -> Flux reads flux-system/k8s-plain-secrets
+  -> Kubernetes stores flux-system/k8s-plain-secrets-dev
+  -> Kubernetes stores flux-system/k8s-plain-secrets-prod
+  -> Flux reads the matching Secret for each environment
   -> Flux decrypts SOPS-encrypted application Secrets
 ```
 
@@ -179,31 +208,54 @@ There would be a chicken-and-egg problem if `flux-sops-age-key-bootstrap.yaml` i
 In this workshop project, the Secret is committed as normal cluster bootstrap YAML:
 
 ```text
-gitops/age/age-key.txt
+dev age private key
   -> copied into gitops/clusters/dev/flux-sops-age-key-bootstrap.yaml
+prod age private key
   -> copied into gitops/clusters/prod/flux-sops-age-key-bootstrap.yaml
   -> kubectl apply -k gitops/clusters/dev
   -> kubectl apply -k gitops/clusters/prod
-  -> Kubernetes stores flux-system/k8s-plain-secrets
+  -> Kubernetes stores flux-system/k8s-plain-secrets-dev
+  -> Kubernetes stores flux-system/k8s-plain-secrets-prod
   -> Flux decrypts gitops/overlays/dev/secret.enc.yaml
   -> Flux decrypts gitops/overlays/prod/secret.enc.yaml
 ```
 
-This is intentionally simple and intentionally insecure. It keeps the whole workshop self-contained. The important conceptual point is that Flux receives an ordinary Kubernetes Secret named `k8s-plain-secrets`; the source of that Secret is a bootstrap decision.
+This is intentionally simple and intentionally insecure. It keeps the whole workshop self-contained. The important conceptual point is that Flux receives ordinary Kubernetes Secrets named `k8s-plain-secrets-dev` and `k8s-plain-secrets-prod`; the source of those Secrets is a bootstrap decision.
 
 In a real system, `age-key.txt` should not be committed. Common delivery options are:
 
-* create `flux-system/k8s-plain-secrets` once during cluster bootstrap from an operator machine
+* create the Flux age-key Secrets once during cluster bootstrap from an operator machine
 * inject it from a cloud secret manager, for example AWS Secrets Manager, Azure Key Vault, Google Secret Manager or HashiCorp Vault
 * let the platform bootstrap process create it before Flux starts reconciling application manifests
 * use separate age keys per environment or cluster, so dev cannot decrypt prod secrets
 
 The key point is ownership: Git contains encrypted application secrets, while the cluster receives the SOPS decryption identity through a separate trusted bootstrap channel.
 
+Put each environment's age public key into its overlay-local SOPS policy file:
+
+```text
+dev public key  -> gitops/overlays/dev/.sops.yaml
+prod public key -> gitops/overlays/prod/.sops.yaml
+```
+
+Print separate dev/prod workshop age keypairs:
+
+```bash
+scripts/generate-workshop-age-keys.sh
+```
+
+The script only prints keys. It does not create committed key files.
+
 Encrypt the dev/prod workshop secrets:
 
 ```bash
 scripts/encrypt-workshop-secrets.sh
+```
+
+Decrypt the dev/prod workshop secrets:
+
+```bash
+scripts/decrypt-workshop-secrets.sh
 ```
 
 The encryption script mutates these files in place:
@@ -213,7 +265,7 @@ gitops/overlays/dev/secret.enc.yaml
 gitops/overlays/prod/secret.enc.yaml
 ```
 
-Commit and push the generated key, SOPS config, and encrypted files before running the full test.
+Commit and push the age key, overlay SOPS configs, and encrypted files before running the full test.
 
 ## Docker Desktop test model
 

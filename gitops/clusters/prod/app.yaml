@@ -16,4 +16,4 @@ spec:
   decryption:
     provider: sops
     secretRef:
-      name: k8s-plain-secrets
+      name: k8s-plain-secrets-prod
