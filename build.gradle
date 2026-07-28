@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -37,7 +37,13 @@ tasks.register('dockerBuildImage', Exec) {
     description = 'Builds the local Docker image used by Docker Desktop Kubernetes tests.'
     dependsOn tasks.named('bootJar')
 
-    commandLine 'docker',
+    def dockerExecutable = 'docker'
+    def dockerDesktopExecutable = file('/Applications/Docker.app/Contents/Resources/bin/docker')
+    if (dockerDesktopExecutable.exists()) {
+        dockerExecutable = dockerDesktopExecutable.absolutePath
+    }
+
+    commandLine dockerExecutable,
             'build',
             '--tag',
             'spring-boot-k8s-gitops-flux-sops:latest',

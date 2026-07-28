@@ -229,6 +229,20 @@ It assumes:
 * `sops` and `age-keygen` were used to generate real encrypted secrets
 * this repository has been pushed to `https://github.com/mtumilowicz/spring-boot-k8s-gitops-flux-sops.git` on branch `main`
 
+Verify the required Kubernetes tools:
+
+```bash
+kubectl version --client
+kubectl config current-context
+flux --version
+```
+
+Expected Kubernetes context:
+
+```text
+docker-desktop
+```
+
 The test:
 
 * builds the local image `spring-boot-k8s-gitops-flux-sops:latest`

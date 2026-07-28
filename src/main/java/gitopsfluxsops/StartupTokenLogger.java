@@ -40,11 +40,8 @@ class StartupTokenLogger implements ApplicationRunner {
          * only to make the Kubernetes Secret -> mounted application.yml -> Spring
          * property binding path directly observable during startup.
          */
-        log.info(
-                "WORKSHOP_TOKEN_CHECK activeProfiles={} demo.token1={} demo.token2={}",
-                activeProfiles,
-                properties.token1(),
-                properties.token2()
-        );
+        log.info("WORKSHOP_TOKEN_CHECK activeProfiles={}", activeProfiles);
+        log.info("WORKSHOP_TOKEN_CHECK demo.token1={}", properties.token1());
+        log.info("WORKSHOP_TOKEN_CHECK demo.token2={}", properties.token2());
     }
 }
