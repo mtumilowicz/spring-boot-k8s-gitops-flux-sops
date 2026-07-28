@@ -298,6 +298,35 @@ Decrypt the dev/prod workshop secrets:
 scripts/decrypt-workshop-secrets.sh
 ```
 
+That script only prints decrypted YAML to the console. It does not modify files.
+
+To edit a SOPS file, prefer:
+
+```bash
+cd gitops/overlays/dev
+sops secret.enc.yaml
+```
+
+SOPS opens the decrypted content in an editor and writes the file back encrypted.
+
+`--in-place` means the file itself is replaced on disk. For example:
+
+```bash
+sops --decrypt --in-place secret.enc.yaml
+```
+
+replaces encrypted YAML with plaintext YAML. Re-encrypt it afterwards:
+
+```bash
+sops --encrypt --in-place secret.enc.yaml
+```
+
+Without `--in-place`, SOPS only prints to the terminal:
+
+```bash
+sops --decrypt secret.enc.yaml
+```
+
 The encryption script mutates these files in place:
 
 ```text
