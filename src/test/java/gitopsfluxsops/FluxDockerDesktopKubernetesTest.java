@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 class FluxDockerDesktopKubernetesTest {
@@ -56,5 +57,12 @@ class FluxDockerDesktopKubernetesTest {
                 .isZero();
 
         return output;
+    }
+
+    @AfterAll
+    static void cleanup() throws IOException, InterruptedException {
+        run("kubectl", "-n", "flux-system", "delete", "kustomization", APP + "-dev", APP + "-prod", "--ignore-not-found");
+        run("kubectl", "-n", "flux-system", "delete", "gitrepository", APP + "-dev", APP + "-prod", "--ignore-not-found");
+        run("kubectl", "delete", "namespace", APP + "-dev", APP + "-prod", "--ignore-not-found");
     }
 }
