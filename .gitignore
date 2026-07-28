@@ -3,6 +3,7 @@ build/
 out/
 *.log
 *.class
+.env
 
 .idea/
 *.iml

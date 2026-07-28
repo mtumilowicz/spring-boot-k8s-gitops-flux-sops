@@ -238,6 +238,46 @@ dev public key  -> gitops/overlays/dev/.sops.yaml
 prod public key -> gitops/overlays/prod/.sops.yaml
 ```
 
+## Adding a developer key to dev
+
+To let a developer encrypt and decrypt only dev secrets, add that developer's age public key to the dev SOPS policy:
+
+```text
+gitops/overlays/dev/.sops.yaml
+```
+
+Example:
+
+```yaml
+keys:
+  flux_age_key: &flux_age_key age1...
+  mtumilowicz_age_key: &mtumilowicz_age_key age1...
+
+creation_rules:
+  - path_regex: secret\.enc\.yaml
+    encrypted_regex: ^(data|stringData)
+    age:
+      - *flux_age_key
+      - *mtumilowicz_age_key
+```
+
+Do not add that developer key to prod unless the developer should also decrypt prod secrets.
+
+After changing recipients, re-encrypt the dev secret so SOPS writes a data key for the new recipient:
+
+```bash
+cd gitops/overlays/dev
+sops --decrypt --in-place secret.enc.yaml
+sops --encrypt --in-place secret.enc.yaml
+```
+
+After this, either the Flux dev private key or the developer private key can decrypt:
+
+```bash
+cd gitops/overlays/dev
+sops --decrypt secret.enc.yaml
+```
+
 Print separate dev/prod workshop age keypairs:
 
 ```bash
