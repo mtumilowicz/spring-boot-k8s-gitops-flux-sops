@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 class FluxDockerDesktopKubernetesTest {
 
-    private static final String APP = "spring-boot-k8s-gitops-flux-sops";
+    private static final String APP = "spring-boot-k8s-gitops-flux-sops-workshop";
     private static final Path ROOT = Path.of(System.getProperty("project.root", ".")).toAbsolutePath();
 
     @Test

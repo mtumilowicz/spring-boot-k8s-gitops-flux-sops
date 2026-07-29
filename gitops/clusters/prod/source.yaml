@@ -1,10 +1,10 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
-  name: spring-boot-k8s-gitops-flux-sops-prod
+  name: spring-boot-k8s-gitops-flux-sops-workshop-prod
   namespace: flux-system
 spec:
   interval: 30s
-  url: https://github.com/mtumilowicz/spring-boot-k8s-gitops-flux-sops.git
+  url: https://github.com/mtumilowicz/spring-boot-k8s-gitops-flux-sops-workshop.git
   ref:
     branch: main

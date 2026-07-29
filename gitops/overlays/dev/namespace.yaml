@@ -1,4 +1,4 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: spring-boot-k8s-gitops-flux-sops-dev
+  name: spring-boot-k8s-gitops-flux-sops-workshop-dev

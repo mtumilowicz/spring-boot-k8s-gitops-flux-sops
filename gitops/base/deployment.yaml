@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: spring-boot-k8s-gitops-flux-sops
+  name: spring-boot-k8s-gitops-flux-sops-workshop
   labels:
-    app.kubernetes.io/name: spring-boot-k8s-gitops-flux-sops
+    app.kubernetes.io/name: spring-boot-k8s-gitops-flux-sops-workshop
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: spring-boot-k8s-gitops-flux-sops
+      app.kubernetes.io/name: spring-boot-k8s-gitops-flux-sops-workshop
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: spring-boot-k8s-gitops-flux-sops
+        app.kubernetes.io/name: spring-boot-k8s-gitops-flux-sops-workshop
     spec:
       containers:
-        - name: spring-boot-k8s-gitops-flux-sops
-          image: spring-boot-k8s-gitops-flux-sops:latest
+        - name: spring-boot-k8s-gitops-flux-sops-workshop
+          image: spring-boot-k8s-gitops-flux-sops-workshop:latest
           imagePullPolicy: Never
           ports:
             - name: http
@@ -31,7 +31,7 @@ spec:
       volumes:
         - name: application-config
           secret:
-            secretName: spring-boot-k8s-gitops-flux-sops-config
+            secretName: spring-boot-k8s-gitops-flux-sops-workshop-config
             items:
               - key: application.yml
                 path: application.yml

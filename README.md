@@ -1,4 +1,4 @@
-# spring-boot-k8s-gitops-flux-sops
+# spring-boot-k8s-gitops-flux-sops-workshop
 
 A minimal Java 21/Spring Boot service used to show how Kubernetes, GitOps, Flux and SOPS fit together.
 
@@ -95,7 +95,7 @@ The encrypted Secret is shaped like this after SOPS encryption:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: spring-boot-k8s-gitops-flux-sops-config
+  name: spring-boot-k8s-gitops-flux-sops-workshop-config
 type: Opaque
 stringData:
   application.yml: ENC[...]
@@ -348,7 +348,7 @@ It assumes:
 * `kubectl` is installed
 * `flux` CLI is installed
 * `sops` and `age-keygen` were used to generate real encrypted secrets
-* this repository has been pushed to `https://github.com/mtumilowicz/spring-boot-k8s-gitops-flux-sops.git` on branch `main`
+* this repository has been pushed to `https://github.com/mtumilowicz/spring-boot-k8s-gitops-flux-sops-workshop.git` on branch `main`
 
 Verify the required Kubernetes tools:
 
@@ -366,7 +366,7 @@ docker-desktop
 
 The test:
 
-* builds the local image `spring-boot-k8s-gitops-flux-sops:latest`
+* builds the local image `spring-boot-k8s-gitops-flux-sops-workshop:latest`
 * installs Flux into Docker Desktop Kubernetes if `flux-system` is missing
 * applies the Flux SOPS age Secret, sources and Kustomizations from `gitops/clusters/dev` and `gitops/clusters/prod`
 * waits for Flux to reconcile dev and prod

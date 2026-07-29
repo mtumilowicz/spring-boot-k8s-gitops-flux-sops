@@ -25,7 +25,7 @@ dependencies {
 }
 
 tasks.named('bootJar') {
-    archiveFileName = 'spring-boot-k8s-gitops-flux-sops.jar'
+    archiveFileName = 'spring-boot-k8s-gitops-flux-sops-workshop.jar'
 }
 
 tasks.withType(Test).configureEach {
@@ -46,7 +46,7 @@ tasks.register('dockerBuildImage', Exec) {
     commandLine dockerExecutable,
             'build',
             '--tag',
-            'spring-boot-k8s-gitops-flux-sops:latest',
+            'spring-boot-k8s-gitops-flux-sops-workshop:latest',
             '.'
 }
 
