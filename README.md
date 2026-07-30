@@ -300,6 +300,14 @@ scripts/decrypt-workshop-secrets.sh
 
 That script only prints decrypted YAML to the console. It does not modify files.
 
+SOPS encrypts only the fields selected by `encrypted_regex`, but by default its MAC authenticates the whole YAML document, including fields that remain readable. Manually changing fields such as `metadata.name` therefore invalidates the MAC and produces:
+
+```text
+MAC mismatch. File has ..., computed ...
+```
+
+This happened in commit `34e489e`: `metadata.name` was renamed directly in both encrypted files. The ciphertext was still decryptable with the correct age keys, but SOPS rejected both files because their authenticated contents had changed.
+
 To edit a SOPS file, prefer:
 
 ```bash
