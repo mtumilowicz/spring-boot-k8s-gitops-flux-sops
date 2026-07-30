@@ -143,6 +143,8 @@ gitops/overlays/prod/.sops.yaml  -> prod age public key
 
 ## Workshop age key
 
+* to better understand sop age key, refer to: https://github.com/mtumilowicz/sops-age-key-workshop
+
 This project intentionally commits the age private keys inside the Flux bootstrap Secret manifests:
 
 ```text
@@ -237,112 +239,6 @@ Put each environment's age public key into its overlay-local SOPS policy file:
 dev public key  -> gitops/overlays/dev/.sops.yaml
 prod public key -> gitops/overlays/prod/.sops.yaml
 ```
-
-## Adding a developer key to dev
-
-To let a developer encrypt and decrypt only dev secrets, add that developer's age public key to the dev SOPS policy:
-
-```text
-gitops/overlays/dev/.sops.yaml
-```
-
-Example:
-
-```yaml
-keys:
-  flux_age_key: &flux_age_key age1...
-  mtumilowicz_age_key: &mtumilowicz_age_key age1...
-
-creation_rules:
-  - path_regex: secret\.enc\.yaml
-    encrypted_regex: ^(data|stringData)
-    age:
-      - *flux_age_key
-      - *mtumilowicz_age_key
-```
-
-Do not add that developer key to prod unless the developer should also decrypt prod secrets.
-
-After changing recipients, re-encrypt the dev secret so SOPS writes a data key for the new recipient:
-
-```bash
-cd gitops/overlays/dev
-sops --decrypt --in-place secret.enc.yaml
-sops --encrypt --in-place secret.enc.yaml
-```
-
-After this, either the Flux dev private key or the developer private key can decrypt:
-
-```bash
-cd gitops/overlays/dev
-sops --decrypt secret.enc.yaml
-```
-
-Print separate dev/prod workshop age keypairs:
-
-```bash
-scripts/generate-workshop-age-keys.sh
-```
-
-The script only prints keys. It does not create committed key files.
-
-Encrypt the dev/prod workshop secrets:
-
-```bash
-scripts/encrypt-workshop-secrets.sh
-```
-
-Decrypt the dev/prod workshop secrets:
-
-```bash
-scripts/decrypt-workshop-secrets.sh
-```
-
-That script only prints decrypted YAML to the console. It does not modify files.
-
-SOPS encrypts only the fields selected by `encrypted_regex`, but by default its MAC authenticates the whole YAML document, including fields that remain readable. Manually changing fields such as `metadata.name` therefore invalidates the MAC and produces:
-
-```text
-MAC mismatch. File has ..., computed ...
-```
-
-This happened in commit `34e489e`: `metadata.name` was renamed directly in both encrypted files. The ciphertext was still decryptable with the correct age keys, but SOPS rejected both files because their authenticated contents had changed.
-
-To edit a SOPS file, prefer:
-
-```bash
-cd gitops/overlays/dev
-sops secret.enc.yaml
-```
-
-SOPS opens the decrypted content in an editor and writes the file back encrypted.
-
-`--in-place` means the file itself is replaced on disk. For example:
-
-```bash
-sops --decrypt --in-place secret.enc.yaml
-```
-
-replaces encrypted YAML with plaintext YAML. Re-encrypt it afterwards:
-
-```bash
-sops --encrypt --in-place secret.enc.yaml
-```
-
-Without `--in-place`, SOPS only prints to the terminal:
-
-```bash
-sops --decrypt secret.enc.yaml
-```
-
-The encryption script mutates these files in place:
-
-```text
-gitops/overlays/dev/secret.enc.yaml
-gitops/overlays/prod/secret.enc.yaml
-```
-
-Commit and push the age key, overlay SOPS configs, and encrypted files before running the full test.
 
 ## Docker Desktop test model
 
